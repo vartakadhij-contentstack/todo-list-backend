@@ -1,12 +1,27 @@
-const mongoose = require("mongoose");
 const Task = require("../models/taskSchema");
-const uniqid = require("uniqid");
 const sendErrorMessage = require("../helpers/sendError");
 const AppError = require("../helpers/appErrorClass");
 const sendResponse = require("../helpers/sendResponse");
 
+const verifyPostRequest = (req,res,next)=>{
+    const requiredProperties = ["taskName"];
+    let result = requiredProperties.every((key)=>{
+        return req.body[key];
+    })
+
+    if(!result){
+        sendErrorMessage(new AppError(400,"Unsuccessful","Request Body is not valid"),
+        req,
+        res
+        )
+    }
+    else{
+        next();
+    }
+}
+
 const getAllTasks = async (req,res,next)=>{
-    let tasks = Task.find().then((allTasks)=>{
+    Task.find().then((allTasks)=>{
         console.log("All tasks",allTasks);
         sendResponse(200,"Tasks fetched",allTasks,req,res);
     })
@@ -35,8 +50,13 @@ const createTask = (req,res,next) => {
 const getTaskById = (req,res,next)=>{
     Task.find({taskId: req.params.taskId})
     .then((data)=>{
-        console.log(data);
-        sendResponse(200,"Task fetched",data,req,res);
+        if(!data[0]){
+            sendErrorMessage(new AppError(400,"Unsuccessful","Task not found"),req,res);
+        }
+        else{
+              console.log(data);
+              sendResponse(200,"Task fetched",data,req,res);
+        }
     })
     .catch((err)=>{
         console.log(err);
@@ -44,15 +64,20 @@ const getTaskById = (req,res,next)=>{
     })
 }
 
-const updateTask = (req,res,next) =>{
+const updateTaskStatus = (req,res,next) =>{
     Task.findOneAndUpdate(
         {taskId: req.params.taskId},
         {status: "Completed"},
-        {useFindAndModify: false, new: true}
+        {new: true}
     )
     .then((data)=>{
-        console.log("Data", data);
-        sendResponse(200,"Task updated",data,req,res);
+        if(!data){
+            sendErrorMessage(new AppError(400,"Unsuccessful","Task not found"),req,res);
+        }
+        else{
+              console.log("Data", data);
+              sendResponse(200,"Task status updated",data,req,res);
+        }  
     })
     .catch((err)=>{
         console.log(err);
@@ -63,8 +88,13 @@ const updateTask = (req,res,next) =>{
 const deleteTaskById = (req,res,next) =>{
     Task.findOneAndDelete({taskId: req.params.taskId})
     .then((data)=>{
-        console.log(data);
-        sendResponse(200,"Task deleted",data,req,res);
+        if(!data){
+            sendErrorMessage(new AppError(400,"Unsuccessful","Task not found"),req,res);
+        }
+        else{
+              console.log(data);
+              sendResponse(200,"Task deleted",data,req,res);
+        }  
     })
     .catch((err)=>{
         console.log(err);
@@ -75,5 +105,6 @@ const deleteTaskById = (req,res,next) =>{
 module.exports.getAllTasks = getAllTasks;
 module.exports.createTask = createTask;
 module.exports.getTaskById = getTaskById;
-module.exports.updateTask = updateTask;
+module.exports.updateTaskStatus = updateTaskStatus;
 module.exports.deleteTaskById = deleteTaskById;
+module.exports.verifyPostRequest = verifyPostRequest;
