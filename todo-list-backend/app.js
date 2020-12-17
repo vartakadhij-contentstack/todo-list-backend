@@ -1,6 +1,5 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const Task = require("./models/taskSchema");
 const dotenv = require("dotenv");
 dotenv.config({ path: "./config.env"});
 const taskRouter = require("./routes/todoRoutes");
@@ -19,8 +18,4 @@ mongoose.connect(process.env.DATABASE_URL,{useNewUrlParser: true, useUnifiedTopo
     }
     // console.log(connection);
     console.log("Successfully connected to database");
-
-    // let newTask = new Task( {
-    //     taskName: "Added using save with Promise",
-    // })
 })
